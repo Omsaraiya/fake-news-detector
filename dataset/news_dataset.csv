@@ -1,0 +1,7 @@
+title,text,label
+"Fake News Example","This is a completely fabricated story about aliens landing.","FAKE"
+"Real News Example","The government announced new infrastructure projects today.","REAL"
+"Another Fake","Miracle cure discovered! Drink this everyday to live forever.","FAKE"
+"Another Real","Stock markets closed higher today after tech earnings.","REAL"
+"Fake Politics","Elections cancelled permanently, says anonymous source.","FAKE"
+"Real Tech","A new version of Python has been released with improvements.","REAL"
