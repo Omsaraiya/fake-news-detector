@@ -1,6 +1,7 @@
 import os
+import math
 import joblib
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from dotenv import load_dotenv
 from models import db, User, NewsHistory
 
@@ -26,14 +27,48 @@ except Exception as e:
 
 with app.app_context():
     db.create_all()
-    print("✅ Database tables verified/created successfully!")
 
 @app.route('/')
 def home():
+    return jsonify({"status": "Flask API Server is Running"})
+
+@app.route('/predict', methods=['POST'])
+def predict_news():
+    data = request.get_json()
+    if not data or 'text' not in data:
+        return jsonify({"error": "No text provided"}), 400
+    
+    news_text = data['text']
+
+    features = tfidf_vectorizer.transform([news_text])
+    
+    prediction_label = ml_model.predict(features)[0]
+    
+    distance = ml_model.decision_function(features)[0]
+    real_probability = 1 / (1 + math.exp(-distance)) # Converts distance to a 0.0 - 1.0 scale
+    
+    real_percentage = round(real_probability * 100, 1)
+    fake_percentage = round((1 - real_probability) * 100, 1)
+
+    feature_names = tfidf_vectorizer.get_feature_names_out()
+    user_text_indices = features.nonzero()[1]
+    
+    word_weights = []
+    for idx in user_text_indices:
+        word = feature_names[idx]
+        weight = ml_model.coef_[0][idx]
+        word_weights.append({'word': word, 'weight': weight})
+        
+    word_weights.sort(key=lambda x: abs(x['weight']), reverse=True)
+    top_triggers = [w['word'] for w in word_weights[:3]]
+
     return jsonify({
-        "status": "Flask API Server is Running",
-        "database_connected": True,
-        "ai_models_loaded": "ml_model" in globals()
+        "prediction": prediction_label,
+        "percentages": {
+            "real": real_percentage,
+            "fake": fake_percentage
+        },
+        "trigger_words": top_triggers
     })
 
 if __name__ == '__main__':
