@@ -40,6 +40,20 @@ def history():
     records = NewsHistory.query.order_by(NewsHistory.created_at.desc()).all()
     return render_template('history.html', records=records)
 
+@app.route('/admin')
+def admin_dashboard():
+    total_scans = NewsHistory.query.count()
+    fake_count = NewsHistory.query.filter_by(prediction='FAKE').count()
+    real_count = NewsHistory.query.filter_by(prediction='REAL').count()
+    
+    recent_records = NewsHistory.query.order_by(NewsHistory.created_at.desc()).limit(10).all()
+    
+    return render_template('admin.html', 
+                           total=total_scans, 
+                           fake=fake_count, 
+                           real=real_count, 
+                           records=recent_records)
+
 @app.route('/predict', methods=['POST'])
 def predict_news():
     data = request.get_json()
