@@ -21,16 +21,24 @@ VECTORIZER_PATH = os.path.join(BASE_DIR, 'ml_model', 'tfidf_vectorizer.pkl')
 try:
     ml_model = joblib.load(MODEL_PATH)
     tfidf_vectorizer = joblib.load(VECTORIZER_PATH)
-    print("✅ Machine Learning Models loaded successfully into memory!")
 except Exception as e:
-    print(f"⚠️ Warning: Could not load ML models. Error: {e}")
+    print(f"Warning: Could not load ML models. Error: {e}")
 
 with app.app_context():
     db.create_all()
+    if not User.query.first():
+        guest = User(username="guest", email="guest@example.com", password_hash="none")
+        db.session.add(guest)
+        db.session.commit()
 
 @app.route('/')
 def home():
     return render_template('index.html')
+
+@app.route('/history')
+def history():
+    records = NewsHistory.query.order_by(NewsHistory.created_at.desc()).all()
+    return render_template('history.html', records=records)
 
 @app.route('/predict', methods=['POST'])
 def predict_news():
@@ -60,6 +68,19 @@ def predict_news():
         
     word_weights.sort(key=lambda x: abs(x['weight']), reverse=True)
     top_triggers = [w['word'] for w in word_weights[:3]]
+
+    try:
+        user = User.query.first()
+        history_record = NewsHistory(
+            user_id=user.id,
+            news_text=news_text,
+            prediction=prediction_label,
+            confidence=fake_percentage if prediction_label == 'FAKE' else real_percentage
+        )
+        db.session.add(history_record)
+        db.session.commit()
+    except Exception as e:
+        print(e)
 
     return jsonify({
         "prediction": prediction_label,
