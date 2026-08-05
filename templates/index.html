@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detection System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .trigger-word {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 4px;
+            border-radius: 20px;
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-5">
+        <h2 class="text-center fw-bold mb-4 text-primary">Fake News Detection System</h2>
+
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="card p-4 shadow-sm h-100">
+                    <h5 class="fw-semibold mb-3">Analyze News Content</h5>
+                    <textarea id="newsText" class="form-control mb-3" rows="9"
+                        placeholder="Paste news article content here to verify authenticity..."></textarea>
+                    <button id="analyzeBtn" class="btn btn-primary btn-lg w-100 fw-bold">Analyze Article</button>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <div class="card p-4 shadow-sm h-100 text-center" id="resultCard" style="display: none;">
+                    <h5 class="fw-semibold mb-3">Detection Result</h5>
+                    <div id="verdictBadge" class="mb-3"></div>
+
+                    <div style="height: 210px; width: 100%; display: flex; justify-content: center;" class="mb-3">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+
+                    <div class="text-start border-top pt-3">
+                        <h6 class="fw-bold text-secondary mb-1">Key AI Trigger Words:</h6>
+                        <p class="text-muted small mb-2">Words that heavily influenced this classification:</p>
+                        <div id="triggerWordsContainer"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        document.getElementById('analyzeBtn').addEventListener('click', async () => {
+            const text = document.getElementById('newsText').value;
+            const btn = document.getElementById('analyzeBtn');
+
+            if (!text.trim()) {
+                alert("Please enter news text to analyze.");
+                return;
+            }
+
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                const data = await response.json();
+
+                document.getElementById('resultCard').style.display = 'block';
+
+                const badge = document.getElementById('verdictBadge');
+                if (data.prediction === 'FAKE') {
+                    badge.innerHTML = `<span class="badge bg-danger fs-5 w-100 py-2">🚨 FAKE NEWS DETECTED</span>`;
+                } else {
+                    badge.innerHTML = `<span class="badge bg-success fs-5 w-100 py-2">✅ VERIFIED REAL NEWS</span>`;
+                }
+
+                const ctx = document.getElementById('predictionChart').getContext('2d');
+                if (myChart) myChart.destroy();
+
+                myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Fake %', 'Real %'],
+                        datasets: [{
+                            data: [data.percentages.fake, data.percentages.real],
+                            backgroundColor: ['#dc3545', '#198754'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom' }
+                        }
+                    }
+                });
+
+                const wordsDiv = document.getElementById('triggerWordsContainer');
+                wordsDiv.innerHTML = data.trigger_words.map(word =>
+                    `<span class="trigger-word">${word}</span>`
+                ).join('');
+
+            } catch (error) {
+                alert("Failed to communicate with backend server.");
+            }
+
+            btn.innerHTML = 'Analyze Article';
+            btn.disabled = false;
+        });
+    </script>
+</body>
+
+</html>

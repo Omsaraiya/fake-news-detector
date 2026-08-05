@@ -1,7 +1,7 @@
 import os
 import math
 import joblib
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 from dotenv import load_dotenv
 from models import db, User, NewsHistory
 
@@ -30,7 +30,7 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    return jsonify({"status": "Flask API Server is Running"})
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict_news():
@@ -41,11 +41,10 @@ def predict_news():
     news_text = data['text']
 
     features = tfidf_vectorizer.transform([news_text])
-    
     prediction_label = ml_model.predict(features)[0]
     
     distance = ml_model.decision_function(features)[0]
-    real_probability = 1 / (1 + math.exp(-distance)) # Converts distance to a 0.0 - 1.0 scale
+    real_probability = 1 / (1 + math.exp(-distance))
     
     real_percentage = round(real_probability * 100, 1)
     fake_percentage = round((1 - real_probability) * 100, 1)
