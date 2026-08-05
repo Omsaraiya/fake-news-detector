@@ -1,5 +1,4 @@
 import os
-import math
 import joblib
 from flask import Flask, jsonify, request, render_template, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -27,7 +26,6 @@ except Exception as e:
 
 with app.app_context():
     db.create_all()
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -73,7 +71,6 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-
 @app.route('/')
 def home():
     if 'user_id' not in session:
@@ -99,6 +96,8 @@ def admin_dashboard():
 
 @app.route('/predict', methods=['POST'])
 def predict_news():
+    import math # Ensure math is imported at the top of your file
+    
     if 'user_id' not in session:
         return jsonify({"error": "Unauthorized"}), 401
 
@@ -108,14 +107,18 @@ def predict_news():
     
     news_text = data['text']
     features = tfidf_vectorizer.transform([news_text])
+    
+    # 1. Get Prediction
     prediction_label = ml_model.predict(features)[0]
     
+    # 2. Calculate Exact Probabilities using a Sigmoid curve on the PAC Decision Function
     distance = ml_model.decision_function(features)[0]
     real_probability = 1 / (1 + math.exp(-distance))
     
     real_percentage = round(real_probability * 100, 1)
     fake_percentage = round((1 - real_probability) * 100, 1)
 
+    # 3. Keyword Extraction
     feature_names = tfidf_vectorizer.get_feature_names_out()
     user_text_indices = features.nonzero()[1]
     
@@ -128,6 +131,7 @@ def predict_news():
     word_weights.sort(key=lambda x: abs(x['weight']), reverse=True)
     top_triggers = [w['word'] for w in word_weights[:3]]
 
+    # 4. Save to Database
     try:
         history_record = NewsHistory(
             user_id=session['user_id'],
