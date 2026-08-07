@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis History</title>
+    <title>Analysis History - TruthGuard AI</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -25,14 +25,48 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container py-5">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-5 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <span>🛡️ TruthGuard AI</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75" href="/">Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-semibold" href="/history">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75" href="/admin">Admin Panel</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <span class="badge bg-secondary px-3 py-2">👤 {{ session.username or 'User' }}</span>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="/logout" class="btn btn-outline-danger btn-sm px-3">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-2">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold text-primary">News Analysis History</h2>
-            <a href="/" class="btn btn-outline-secondary">← Back to Scanner</a>
+            <h2 class="fw-bold text-dark">My Scan History</h2>
         </div>
 
         <div class="table-wrapper">
@@ -69,6 +103,7 @@
             </table>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
