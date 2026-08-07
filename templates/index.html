@@ -4,60 +4,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fake News Detection System</title>
+    <title>AI Fake News Detection System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #1e293b;
         }
 
-        .card {
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .app-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
-            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s ease-in-out;
         }
 
-        .trigger-word {
-            display: inline-block;
-            padding: 6px 14px;
-            margin: 4px;
-            border-radius: 20px;
-            background-color: #e9ecef;
-            color: #495057;
+        .app-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+        }
+
+        .disclaimer-banner {
+            background-color: #f1f5f9;
+            border-left: 4px solid #3b82f6;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        .btn-analyze {
+            background-color: #2563eb;
+            border: none;
+            padding: 12px;
             font-weight: 600;
-            font-size: 0.85em;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .btn-analyze:hover {
+            background-color: #1d4ed8;
+        }
+
+        .trigger-badge {
+            background-color: #e2e8f0;
+            color: #334155;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
         }
     </style>
 </head>
 
 <body>
-    <div class="container py-5">
-        <h2 class="text-center fw-bold mb-4 text-primary">Fake News Detection System</h2>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <span>🛡️ TruthGuard AI</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-2">
+                    <li class="nav-item">
+                        <a class="nav-link active fw-semibold" href="/">Scanner</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75" href="/history">History</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light opacity-75" href="/admin">Admin Panel</a>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <span class="badge bg-secondary px-3 py-2">👤 {{ username or 'User' }}</span>
+                    </li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="/logout" class="btn btn-outline-danger btn-sm px-3">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container pb-5">
+
+        <div class="disclaimer-banner mb-4 d-flex align-items-center justify-content-between">
+            <div>
+                <strong>ℹ️ System Notice:</strong> AI predictions provide heuristic analysis based on linguistic &
+                vocabulary patterns. Always verify critical news against official primary sources.
+            </div>
+            <span class="badge bg-primary-subtle text-primary fw-bold">v1.0 Engine</span>
+        </div>
 
         <div class="row g-4">
-            <div class="col-md-7">
-                <div class="card p-4 shadow-sm h-100">
-                    <h5 class="fw-semibold mb-3">Analyze News Content</h5>
-                    <textarea id="newsText" class="form-control mb-3" rows="9"
-                        placeholder="Paste news article content here to verify authenticity..."></textarea>
-                    <button id="analyzeBtn" class="btn btn-primary btn-lg w-100 fw-bold">Analyze Article</button>
+            <div class="col-lg-6">
+                <div class="app-card p-4 h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <h4 class="fw-bold text-dark mb-1">Analyze News Article</h4>
+                        <p class="text-muted small mb-3">Paste the news text or headline below to evaluate its
+                            authenticity.</p>
+
+                        <div class="mb-3">
+                            <textarea id="newsText" class="form-control" rows="10"
+                                placeholder="Paste news article content here... (e.g., statements, articles, or social media posts)"
+                                style="border-radius: 8px; resize: none;"></textarea>
+                        </div>
+                    </div>
+
+                    <button id="analyzeBtn" onclick="analyzeNews()" class="btn btn-primary btn-analyze w-100 mt-2">
+                        <span id="btnText">Analyze Article Content</span>
+                        <span id="btnSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                    </button>
                 </div>
             </div>
 
-            <div class="col-md-5">
-                <div class="card p-4 shadow-sm h-100 text-center" id="resultCard" style="display: none;">
-                    <h5 class="fw-semibold mb-3">Detection Result</h5>
-                    <div id="verdictBadge" class="mb-3"></div>
+            <div class="col-lg-6">
+                <div class="app-card p-4 h-100">
+                    <h4 class="fw-bold text-dark mb-1">Detection Results</h4>
+                    <p class="text-muted small mb-4">Linguistic probability break-down generated by the PAC model.</p>
 
-                    <div style="height: 210px; width: 100%; display: flex; justify-content: center;" class="mb-3">
-                        <canvas id="predictionChart"></canvas>
+                    <div id="emptyState" class="text-center py-5">
+                        <div class="fs-1 text-muted mb-2">🔍</div>
+                        <h6 class="fw-bold text-secondary">Awaiting Input</h6>
+                        <p class="text-muted small">Enter an article on the left and click "Analyze" to see
+                            classification details.</p>
                     </div>
 
-                    <div class="text-start border-top pt-3">
-                        <h6 class="fw-bold text-secondary mb-1">Key AI Trigger Words:</h6>
-                        <p class="text-muted small mb-2">Words that heavily influenced this classification:</p>
-                        <div id="triggerWordsContainer"></div>
+                    <div id="resultContainer" class="d-none">
+                        <div id="verdictBadge" class="alert text-center fw-bold fs-5 mb-4 py-3" role="alert"></div>
+
+                        <div class="mb-4" style="height: 200px; position: relative;">
+                            <canvas id="predictionChart"></canvas>
+                        </div>
+
+                        <hr class="my-4" style="border-color: #e2e8f0;">
+
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1">Key Influencing Keywords:</h6>
+                            <p class="text-muted small mb-2">Words in the text that heavily influenced this
+                                classification score:</p>
+                            <div id="triggerWords" class="d-flex flex-wrap gap-2 pt-1"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,70 +164,91 @@
     <script>
         let myChart = null;
 
-        document.getElementById('analyzeBtn').addEventListener('click', async () => {
-            const text = document.getElementById('newsText').value;
-            const btn = document.getElementById('analyzeBtn');
-
-            if (!text.trim()) {
-                alert("Please enter news text to analyze.");
+        async function analyzeNews() {
+            const textInput = document.getElementById('newsText').value.trim();
+            if (!textInput) {
+                alert("Please paste some news text before analyzing!");
                 return;
             }
 
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Analyzing...';
-            btn.disabled = true;
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            btnText.innerText = "Processing Analysis...";
+            btnSpinner.classList.remove('d-none');
 
             try {
                 const response = await fetch('/predict', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
+                    body: JSON.stringify({ text: textInput })
                 });
+
                 const data = await response.json();
 
-                document.getElementById('resultCard').style.display = 'block';
-
-                const badge = document.getElementById('verdictBadge');
-                if (data.prediction === 'FAKE') {
-                    badge.innerHTML = `<span class="badge bg-danger fs-5 w-100 py-2">🚨 FAKE NEWS DETECTED</span>`;
+                if (response.ok) {
+                    displayResults(data);
                 } else {
-                    badge.innerHTML = `<span class="badge bg-success fs-5 w-100 py-2">✅ VERIFIED REAL NEWS</span>`;
+                    alert(data.error || "An error occurred during analysis.");
                 }
+            } catch (err) {
+                alert("Could not connect to the server. Make sure app.py is running.");
+            } finally {
+                btnText.innerText = "Analyze Article Content";
+                btnSpinner.classList.add('d-none');
+            }
+        }
 
-                const ctx = document.getElementById('predictionChart').getContext('2d');
-                if (myChart) myChart.destroy();
+        function displayResults(data) {
+            document.getElementById('emptyState').classList.add('d-none');
+            document.getElementById('resultContainer').classList.remove('d-none');
 
-                myChart = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Fake %', 'Real %'],
-                        datasets: [{
-                            data: [data.percentages.fake, data.percentages.real],
-                            backgroundColor: ['#dc3545', '#198754'],
-                            borderWidth: 0
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { position: 'bottom' }
-                        }
-                    }
-                });
-
-                const wordsDiv = document.getElementById('triggerWordsContainer');
-                wordsDiv.innerHTML = data.trigger_words.map(word =>
-                    `<span class="trigger-word">${word}</span>`
-                ).join('');
-
-            } catch (error) {
-                alert("Failed to communicate with backend server.");
+            const verdictBadge = document.getElementById('verdictBadge');
+            if (data.prediction === 'FAKE') {
+                verdictBadge.className = "alert alert-danger text-center fw-bold fs-5 mb-4 py-3";
+                verdictBadge.innerHTML = "🚨 FAKE NEWS DETECTED";
+            } else {
+                verdictBadge.className = "alert alert-success text-center fw-bold fs-5 mb-4 py-3";
+                verdictBadge.innerHTML = "✅ REAL NEWS VERIFIED";
             }
 
-            btn.innerHTML = 'Analyze Article';
-            btn.disabled = false;
-        });
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Fake %', 'Real %'],
+                    datasets: [{
+                        data: [data.percentages.fake, data.percentages.real],
+                        backgroundColor: ['#ef4444', '#22c55e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            const triggerContainer = document.getElementById('triggerWords');
+            triggerContainer.innerHTML = '';
+
+            if (data.trigger_words && data.trigger_words.length > 0) {
+                data.trigger_words.forEach(word => {
+                    const span = document.createElement('span');
+                    span.className = 'trigger-badge';
+                    span.innerText = word;
+                    triggerContainer.appendChild(span);
+                });
+            } else {
+                triggerContainer.innerHTML = '<span class="text-muted small">No specific trigger words identified.</span>';
+            }
+        }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
